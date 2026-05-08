@@ -1,0 +1,89 @@
+name: Flet APK Build
+
+on:
+  push:
+    branches-ignore:
+      - main
+    paths:
+      - '.github/workflows/flet-build-test.yml'
+      - '.fvmrc'
+      - 'client/**'
+      - 'sdk/python/packages/**'
+      - 'packages/flet/**'
+      - 'sdk/python/examples/apps/flet_build_test/**'
+
+  pull_request:
+    paths:
+      - '.github/workflows/flet-build-test.yml'
+      - '.fvmrc'
+      - 'client/**'
+      - 'sdk/python/packages/**'
+      - 'packages/flet/**'
+      - 'sdk/python/examples/apps/flet_build_test/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: ci-flet-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ROOT: "${{ github.workspace }}"
+  SDK_PYTHON: "${{ github.workspace }}/sdk/python"
+  SCRIPTS: "${{ github.workspace }}/.github/scripts"
+  UV_PYTHON: 3.12
+  PYTHONUTF8: 1
+  FLET_CLI_NO_RICH_OUTPUT: 1
+
+jobs:
+  apk-build:
+    name: APK Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Patch versions
+        shell: bash
+        run: |
+          source "${SCRIPTS}/update_build_version.sh"
+          source "${SCRIPTS}/common.sh"
+          patch_python_package_versions
+
+      - name: Install Linux dependencies
+        shell: bash
+        run: |
+          sudo apt update --allow-releaseinfo-change
+          LINUX_DEPS="$(uv run --project sdk/python/packages/flet python -c 'from flet.utils.linux_deps import linux_dependencies; print(" ".join(linux_dependencies))')"
+          
+          if [ -n "$LINUX_DEPS" ]; then
+            sudo apt-get install -y --no-install-recommends $LINUX_DEPS
+          fi
+          
+          sudo apt-get clean
+
+      - name: Setup Flutter
+        uses: kuhnroyal/flutter-fvm-config-action/setup@v3
+        with:
+          path: '.fvmrc'
+          cache: true
+
+      - name: Build APK
+        shell: bash
+        working-directory: sdk/python/examples/apps/flet_build_test
+        run: |
+          uv run flet build apk --yes --verbose --build-number ${{ github.run_number }}
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: apk-build
+          path: sdk/python/examples/apps/flet_build_test/build/apk
+          if-no-files-found: error
