@@ -79,7 +79,8 @@ jobs:
         shell: bash
         working-directory: ${{ github.workspace }}
         run: |
-          flutter doctor --android-licenses || true
+          yes | flutter doctor --android-licenses || true
+          yes | sdkmanager --licenses || true
           uv run flet build apk --yes --verbose --build-number ${{ github.run_number }}
 
       - name: Upload APK Artifact
