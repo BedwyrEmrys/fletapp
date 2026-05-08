@@ -77,8 +77,9 @@ jobs:
 
       - name: Build APK
         shell: bash
-        working-directory: sdk/python/examples/apps/flet_build_test
+        working-directory: ${{ github.workspace }}
         run: |
+          flutter doctor --android-licenses || true
           uv run flet build apk --yes --verbose --build-number ${{ github.run_number }}
 
       - name: Upload APK Artifact
