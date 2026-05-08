@@ -4,13 +4,13 @@ on:
   push:
     # branches-ignore:
     #   - main
-    paths:
-      - '.github/workflows/flet-build-test.yml'
-      - '.fvmrc'
-      - 'client/**'
-      - 'sdk/python/packages/**'
-      - 'packages/flet/**'
-      - 'sdk/python/examples/apps/flet_build_test/**'
+    # paths:
+    #   - '.github/workflows/flet-build-test.yml'
+    #   - '.fvmrc'
+    #   - 'client/**'
+    #   - 'sdk/python/packages/**'
+    #   - 'packages/flet/**'
+    #   - 'sdk/python/examples/apps/flet_build_test/**'
 
   pull_request:
     paths:
