@@ -87,5 +87,5 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: apk-build
-          path: sdk/python/examples/apps/flet_build_test/build/apk
+          path: build/apk
           if-no-files-found: error
